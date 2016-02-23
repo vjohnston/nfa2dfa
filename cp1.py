@@ -13,122 +13,120 @@ start = '1'
 
 print nfa
 
+# function which goes through the states in the nfa and converts all the & transitions to &*
 def modify_epsilon_transitions():
-	# create a new nfa with transitions from each symbol in alphabet
 	for state in nfa:
-		# create &*
-		# create a list and add the state as the first element
+		# The &* transition contains itself
 		nfa[state]['&*'] = [state]
-		# if there is an epsilon transition, add states to ep*
+		# if there is an epsilon transition, add states to &*
+		# then remove & transition
 		if '&' in nfa[state]:
 			for nextstate in nfa[state]['&']:
 				nfa[state]['&*'].append(nextstate)
-			# remove & transition
 			nfa[state].pop('&',None)
 
+# function gets all the transitions for parent state and symbol based on childtate transitions in nfa
+# e.g. parent might be 12 so the childstates would be 1 and 2. If the symbol is 'a', check what states the children state point to with 'a'
 def add_next_states(childstate,symbol,transitions):
-	nextstates = []
+	nextstates = [] # stores all the next states of the child
+	# check the childstate has a transition with the symbol
 	if symbol in nfa[childstate]:
+		# check if childstate leads to multiple states
+		# if it does, all all those states to the list of nextstates
 		if isinstance(nfa[childstate][symbol],list):
 			for nextstate in nfa[childstate][symbol]:
 				nextstates.append(nextstate)
+		# if the childstate only goes to one state, add that state to nextstates
 		else:
 			nextstates.append(nfa[childstate][symbol])
+		# Go through all the states in the next state and add them to the transition for the parent state
 		while (len(nextstates)):
 			checkstate = nextstates.pop()
 			for state in nfa[checkstate]['&*']:
 				if state not in transitions[symbol]:
 					transitions[symbol].append(state)
 
+# functions adds all the &* states to the transition of parent states
 def add_epsilon_transitions(childstate,symbol,transitions):
 	if len(nfa[childstate]['&*']) > 1:
 		for estate in nfa[childstate]['&*']:
 			if estate not in transitions[symbol]:
 				transitions[symbol].append(estate)
 
-dfa = {}
-queue = [start]
-oldstates = []
-count = 0
-
-modify_epsilon_transitions()
-
-# stay in while until there are no more states to add
-while (len(queue)):
-	# get first element from the list
-	newstate = queue.pop()
-	print "newstate"
-	print newstate
-
-	# create dictionary for new state
-	transitions = {}
-	for symbol in alphabet:
-		transitions[symbol] = []
-		states_to_check = []
-		for childstate in newstate:
-			# check if the symbol is in the nfa
-			print symbol
-			print childstate
-			#if symbol in nfa[childstate]:
-				# check if the symbol is a list
-			#	if isinstance(nfa[childstate][symbol],list):
-			#		# if a symbol maps to a list of states, add each state to the transition
-			#		for s in nfa[childstate][symbol]:
-			#			states_to_check.append(s)
-			#	else:
-			#		states_to_check.append(nfa[childstate][symbol])
-			#	print states_to_check
-			#	print nfa
-			#	while (len(states_to_check)):
-			#		state = states_to_check.pop()
-					# add &* transitions to transitions
-			#		for s in nfa[state]['&*']:
-			#			if s not in transitions[symbol]:
-			#				print "Push " + s
-			#				transitions[symbol].append(s)
-			add_next_states(childstate,symbol,transitions)
-			if not isinstance(newstate,list):
-				add_epsilon_transitions(childstate,symbol,transitions)
-				#if newstate in nfa:
-			#	if len(nfa[childstate]['&*']) > 1:
-			#		for s in nfa[childstate]['&*']:
-		#		if symbol in nfa[childstate]:
-			#			if s not in transitions[symbol]:
-			#				print "push " + s
-			#				transitions[symbol].append(s)
-				#print transitions[symbol]
-	
+# add the newstate to the list of old states
+# if new states is a list, sort it first so that the states are in order in the old state
+def add_to_oldstate(oldstates,newstate):
 	if isinstance(newstate,list):
 		newstate.sort()
 	oldstates.append(newstate)
-	for a in transitions:
-		statestr = ""
-		if (len(transitions[a])):
-			transitions[a].sort()
-			for n in transitions[a]:
-				statestr = statestr + n
-			if transitions[a] not in oldstates and transitions[a] not in queue:
-				queue.append(transitions[a])
-			transitions[a] = statestr
-		else:
-			transitions[a] = ""
-	
-	newstatestr = ""
-	if isinstance(newstate,list):
-		for state in newstate:
-			newstatestr = newstatestr + state
-		dfa[newstatestr] = transitions
-	else:
-		dfa[newstate] = transitions
+
+# function that converts everything in a list to a string
+def get_list_string(ls):
+	string = ""
+	for s in ls:
+		string = string + s
+	return string
+
+def print_debug(newstate,transitions,stack,oldstates):
 	print "newstate"
 	print newstate
 	print "transitions"
 	print transitions
-	print "queue"
-	print queue
+	print "stack"
+	print stack
 	print "oldstates"
 	print oldstates
-	#if count == 3:
-	#	break
-	#count = count + 1
+
+# Initialize variables
+dfa = {} # dfa starts as an empty dictionary
+stack = [start]	# stack keeps track of which dfa states have to be added
+oldstates = [] # old states stores all states which have been added to the dfa
+
+# Turn all & transitions on all states to &* transitions
+modify_epsilon_transitions()
+
+# stay in while as long as there are still states to add to the dfa
+while (len(stack)):
+	# get the next state to be added to the dfa
+	newstate = stack.pop()
+
+	# create the transitions for the next state to be added
+	transitions = {}
+	for symbol in alphabet:
+		# the transition for each symbol starts off as an empty list
+		transitions[symbol] = []
+		# go through all the states in the new state
+		for childstate in newstate:
+			# get all the next states which the childstate goes to with the symbol
+			add_next_states(childstate,symbol,transitions)
+			# if the newstate is not a list it is an original state in the nfa
+			# nfa original states may have epsilon transitions that need to be added
+			if not isinstance(newstate,list):
+				add_epsilon_transitions(childstate,symbol,transitions)
+	
+	# add the new dfa state to the list of old states
+	add_to_oldstate(oldstates,newstate)
+	
+	# go through all the transitions for the state to be added to the dfa
+	for t in transitions:
+		# if the state has transition states, append the transition states to the stack
+		# convert the transitions from a list to a string
+		# if the state does not have any transition stats, make transition an empty string
+		if (len(transitions[t])):
+			transitions[t].sort()
+			if transitions[t] not in oldstates and transitions[t] not in stack:
+				stack.append(transitions[t])
+			transitions[t] = get_list_string(transitions[t])
+		else:
+			transitions[t] = ""
+	
+	# put the newstate and its transitions into the dfa
+	# if the newstate is a list, convert it to a string
+	if isinstance(newstate,list):
+		dfa[get_list_string(newstate)] = transitions
+	else:
+		dfa[newstate] = transitions
+
+#	print_debug(newstate,transitions,stack,oldstates)	
+
 print dfa
