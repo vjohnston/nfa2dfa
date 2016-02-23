@@ -1,15 +1,49 @@
-# starting nfa example
-#nfa = {'p': {0:'p',1:['p','q']}, 'q':{}}
+import sys
+
+def load_csv(nfa_file):
+
+		f = open(nfa_file, 'r')
+		for line in f:
+			line = line.rstrip()
+			line = line.replace(' ','')
+			components = line.split(',')
+
+			if components[0] == '':
+				for piece in components[1:]:
+					alphabet.append(piece)
+			else:
+				if components[0][0] == '>':
+					start = components[0][1:]
+					components[0] = components[0].replace('>','')
+				elif components[0][0] == '@':
+					accept.append(components[0][1:])
+					components[0] = components[0].replace('@','')
+
+				possible = {}
+				for index, piece in enumerate(components[1:]):
+					if piece != '':
+						piece = piece.split('|')
+						possible[alphabet[index]] = piece
+				nfa[components[0]] = possible
+
+		f.close()
+
+alphabet = []
+nfa = {}
+start = 0
+accept = []
+
+load_csv(str(sys.argv[1]))
+
+print "Alphabet: " + str(alphabet)
+print "Transitions: " + str(nfa)
+print "Start: " + str(start)
+print "Accept: " + str(accept)
 #nfa = {'1': {'a':'2', 'c':'4'}, '2': {'b':'3', '&':'1'}, '3': {'a':'2'}, '4': {'c':'3', '&':'3'}}
 #alphabet = ['a','b','c']
-#nfa = {'a': {'1': ['a','b'], '0': 'a'}, 'c': {'1': 'd'}, 'b': {'0': 'c', '&': 'c'}, 'd': {'1': 'd', '0': 'd'}}
-#alphabet = ['0','1']
-#nfa = {'12':{'a':['12','24'],'b':'24'},'24':{'b':'12'}}
-#nfa = {'1':{'a':'3', '&':'2'},'2':{'a':'1'},'3':{'a':'2','b':['2','3']}}
-alphabet = ['a','b']
+#alphabet = ['a','b']
 #nfa = {'1':{'a':['3'], '&':['2']},'2':{'a':['1']},'3':{'a':['2'],'b':['2','3']}}
-nfa = {'1':{'a':['3'], '&':['2']},'2':{'a':['1']},'3':{'a':['2'],'b':['2','3']}}
-start = '1'
+#start = '1'
 
 print nfa
 
