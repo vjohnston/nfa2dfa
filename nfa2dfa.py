@@ -6,12 +6,6 @@ import sys
 
 def load_csv(nfa_file):
 
-		alphabet = []
-		transitions = {}
-
-		start = 0
-		accept = []
-
 		f = open(nfa_file, 'r')
 		for line in f:
 			line = line.rstrip()
@@ -38,11 +32,16 @@ def load_csv(nfa_file):
 
 		f.close()
 
-		print
-		print "Alphabet: " + str(alphabet)
-		print "Transitions: " + str(transitions)
-		print "Start: " + str(start)
-		print "Accept: " + str(accept)
-		print
+alphabet = []
+transitions = {}
+start = 0
+accept = []
 
 load_csv(str(sys.argv[1]))
+
+print
+print "Alphabet: " + str(alphabet)
+print "Transitions: " + str(transitions)
+print "Start: " + str(start)
+print "Accept: " + str(accept)
+print
