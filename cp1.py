@@ -1,7 +1,7 @@
 import sys
 
+# function that converts a csv file into an nfa
 def load_csv(nfa_file):
-
 		f = open(nfa_file, 'r')
 		for line in f:
 			line = line.rstrip()
@@ -26,26 +26,15 @@ def load_csv(nfa_file):
 						possible[alphabet[index]] = piece
 				nfa[components[0]] = possible
 
+		if '&' in alphabet:
+			alphabet.remove('&')
 		f.close()
 
-alphabet = []
-nfa = {}
-start = 0
-accept = []
-
-load_csv(str(sys.argv[1]))
-
-print "Alphabet: " + str(alphabet)
-print "Transitions: " + str(nfa)
-print "Start: " + str(start)
-print "Accept: " + str(accept)
 #nfa = {'1': {'a':'2', 'c':'4'}, '2': {'b':'3', '&':'1'}, '3': {'a':'2'}, '4': {'c':'3', '&':'3'}}
 #alphabet = ['a','b','c']
 #alphabet = ['a','b']
 #nfa = {'1':{'a':['3'], '&':['2']},'2':{'a':['1']},'3':{'a':['2'],'b':['2','3']}}
 #start = '1'
-
-print nfa
 
 # function which goes through the states in the nfa and converts all the & transitions to &*
 def modify_epsilon_transitions():
@@ -111,10 +100,29 @@ def print_debug(newstate,transitions,stack,oldstates):
 	print "oldstates"
 	print oldstates
 
+
+
+
+
 # Initialize variables
+alphabet = []
+nfa = {}
+start = '1'
+accept = []
+
 dfa = {} # dfa starts as an empty dictionary
 stack = [start]	# stack keeps track of which dfa states have to be added
 oldstates = [] # old states stores all states which have been added to the dfa
+
+# read in csv file
+load_csv(str(sys.argv[1]))
+
+# print nfa
+print "NFA:"
+print "Alphabet: " + str(alphabet)
+print "Transitions: " + str(nfa)
+print "Start: " + str(start)
+print "Accept: " + str(accept)
 
 # Turn all & transitions on all states to &* transitions
 modify_epsilon_transitions()
@@ -163,4 +171,16 @@ while (len(stack)):
 
 #	print_debug(newstate,transitions,stack,oldstates)	
 
-print dfa
+# get end states
+newaccept = []
+for state in dfa:
+	for acceptstate in accept:
+		if acceptstate in state:
+			newaccept.append(state)
+
+# print final dfa
+print "DFA:"
+print "Alphabet: " + str(alphabet)
+print "Transitions: " + str(dfa)
+print "Start: " + str(start)
+print "Accept: " + str(newaccept)
