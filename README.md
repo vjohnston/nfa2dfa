@@ -15,10 +15,9 @@ nfa2dfa accepts csv files in the following format:
 - cells in the table should be seperated using commas
 - the start state is indicated with the (>) symbol
 - accept states are indicated with the (@) symbol
-- states should be integers (0-99)
-- symbols should be alphabet characters (a-z)
+- states and symbols can be a combination of integers and strings
 - if an input symbol has multiple transition paths, they can be indicated with the (|) symbol
-- epsilon is representd using the (&) symbol
+- epsilon is represented using the (&) symbol
 
 
 Example:
