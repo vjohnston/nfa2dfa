@@ -1,64 +1,79 @@
+# Victoria Johnston and Mitchell Patin
+# 2/25/16 - Theory of Computing - CSE30151 - CP1
+
 import sys
 
-# function that converts a csv file into an nfa
+# function that converts a csv file into an nfa, returns start state
 def load_csv(nfa_file):
 	f = open(nfa_file, 'r')
+
 	for line in f:
 		line = line.rstrip()
-		line = line.replace(' ','')
-		components = line.split(',')
+		line = line.replace(' ','') # remove all spaces
+		components = line.split(',') # seperate cells using ',' as delimiter
 
+		# looking at the first row, add column headerst to the alphabet
 		if components[0] == '':
 			for piece in components[1:]:
 				alphabet.append(piece)
+		# for all other rows
 		else:
+			# check if state is start state
 			if components[0][0] == '>':
 				start = components[0][1:]
 				components[0] = components[0].replace('>','')
+			# check if state is an accept state
 			elif components[0][0] == '@':
 				accept.append(components[0][1:])
 				components[0] = components[0].replace('@','')
-
+			# temporary dictionary 'possible': key = alphabet symbol, value = list of next states
 			possible = {}
 			for index, piece in enumerate(components[1:]):
+				# if the cell is not empty, create list of possible next states
 				if piece != '':
 					piece = piece.split('|')
 					possible[alphabet[index]] = piece
+			# add sub dictionary to larger dictionary 'nfa' : key = initial state, value = 'possible' dicitonary
 			nfa[components[0]] = possible
 
+	# remove epsilon, indicated with &, from the alphabet
 	if '&' in alphabet:
 		alphabet.remove('&')
 	f.close()
+	# return the start state
 	return start
 
 # function that converts answer back into the table format
 def print_table():
-	print '{0:<6}'.format('') + ',' ,
+	# cellwidth represents the longest state string, plus 2 for possible '@' and '>'
+	cellwidth = len(max(oldstates, key=len)) + 2
+	# print empty top-left cell
+	print '{0:<{1}}'.format('', cellwidth) + ',' ,
+	# print rest of the top row, which will be all symbols in the alphabet
 	for symbol in alphabet:
-		print '{0:<6}'.format(symbol) ,
+		print '{0:<{1}}'.format(symbol, cellwidth) ,
+		# unless the symbol is the last in the alphabet, add a ',' to the end of the cell
 		if symbol != alphabet[-1]:
 				print ',' ,
-	print
+	print # go to next line
 	for state, symbol in dfa.items():
 		cell = ''
+		# add '>' symbol to the start state's cell
 		if state in start:
 			cell += '>'
+		# add '@' symbol to accept states' cells
 		if state in newaccept:
 			cell += '@'
+		# add initial state which will be in the left column
 		cell += str(state) 
-		print '{0:<6}'.format(cell) + ',' ,
-		for symbol, next in symbol.items():
-			print '{0:<6}'.format(next) ,
-			if symbol != alphabet[-1]:
+		print '{0:<{1}}'.format(cell, cellwidth) + ',' ,
+		# fill in the table where each cell represents the next state
+		# at the intersection of initial state and input symbol
+		for s in alphabet:
+			print '{0:<{1}}'.format(symbol[s], cellwidth) ,
+			if s != alphabet[-1]:
 				print ',' ,
 		print
-
-
-#nfa = {'1': {'a':'2', 'c':'4'}, '2': {'b':'3', '&':'1'}, '3': {'a':'2'}, '4': {'c':'3', '&':'3'}}
-#alphabet = ['a','b','c']
-#alphabet = ['a','b']
-#nfa = {'1':{'a':['3'], '&':['2']},'2':{'a':['1']},'3':{'a':['2'],'b':['2','3']}}
-#start = '1'
 
 # function which goes through the states in the nfa and converts all the & transitions to &*
 def modify_epsilon_transitions():
@@ -129,8 +144,6 @@ def print_debug(newstate,transitions,stack,oldstates):
 
 
 
-
-
 # Initialize variables
 alphabet = []
 nfa = {}
@@ -142,18 +155,17 @@ oldstates = [] # old states stores all states which have been added to the dfa
 # read in csv file
 start = load_csv(str(sys.argv[1]))
 
-#nfa = {'a': {'1':'b', '3':'d'}, 'b': {'2':'c', '&':'a'}, 'c': {'1':'b'}, 'd': {'3':'c', '&':'c'}}
-#alphabet = ['1','2','3']
-#start = 'a'
-
 stack = [start] # stack keeps track of which dfa states have to be added
 
 # print nfa
+print "=============="
 print "NFA:"
+print "=============="
 print "Alphabet: " + str(alphabet)
 print "Transitions: " + str(nfa)
 print "Start: " + str(start)
 print "Accept: " + str(accept)
+print
 
 # Turn all & transitions on all states to &* transitions
 modify_epsilon_transitions()
@@ -210,11 +222,23 @@ for state in dfa:
 		if acceptstate in state:
 			newaccept.append(state)
 
+# sort dictionary alphabetically
+#print dfa
+#for state, symbol in dfa.items():
+#		symbol = sorted(symbol)
+#		print symbol
+
+# sort alphabet alphabetically
+alphabet.sort()
+
 # print final dfa
+print "=============="
 print "DFA:"
+print "=============="
 print "Alphabet: " + str(alphabet)
 print "Transitions: " + str(dfa)
 print "Start: " + str(start)
 print "Accept: " + str(newaccept)
+print
 
 print_table()
