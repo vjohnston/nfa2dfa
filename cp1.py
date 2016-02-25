@@ -29,12 +29,13 @@ def load_csv(nfa_file):
 	if '&' in alphabet:
 		alphabet.remove('&')
 	f.close()
+	return start
 
 # function that converts answer back into the table format
 def print_table():
-	print '{:<6}'.format('') + ',' ,
+	print '{0:<6}'.format('') + ',' ,
 	for symbol in alphabet:
-		print '{:<6}'.format(symbol) ,
+		print '{0:<6}'.format(symbol) ,
 		if symbol != alphabet[-1]:
 				print ',' ,
 	print
@@ -45,9 +46,9 @@ def print_table():
 		if state in newaccept:
 			cell += '@'
 		cell += str(state) 
-		print '{:<6}'.format(cell) + ',' ,
+		print '{0:<6}'.format(cell) + ',' ,
 		for symbol, next in symbol.items():
-			print '{:<6}'.format(next) ,
+			print '{0:<6}'.format(next) ,
 			if symbol != alphabet[-1]:
 				print ',' ,
 		print
@@ -67,8 +68,11 @@ def modify_epsilon_transitions():
 		# if there is an epsilon transition, add states to &*
 		# then remove & transition
 		if '&' in nfa[state]:
-			for nextstate in nfa[state]['&']:
-				nfa[state]['&*'].append(nextstate)
+			if isinstance(nfa[state]['&'], list):
+				for nextstate in nfa[state]['&']:
+					nfa[state]['&*'].append(nextstate)
+			else:
+				nfa[state]['&*'].append(nfa[state]['&'])
 			nfa[state].pop('&',None)
 
 # function gets all the transitions for parent state and symbol based on childtate transitions in nfa
@@ -130,15 +134,19 @@ def print_debug(newstate,transitions,stack,oldstates):
 # Initialize variables
 alphabet = []
 nfa = {}
-start = '1'
 accept = []
 
 dfa = {} # dfa starts as an empty dictionary
-stack = [start]	# stack keeps track of which dfa states have to be added
 oldstates = [] # old states stores all states which have been added to the dfa
 
 # read in csv file
-load_csv(str(sys.argv[1]))
+start = load_csv(str(sys.argv[1]))
+
+#nfa = {'a': {'1':'b', '3':'d'}, 'b': {'2':'c', '&':'a'}, 'c': {'1':'b'}, 'd': {'3':'c', '&':'c'}}
+#alphabet = ['1','2','3']
+#start = 'a'
+
+stack = [start] # stack keeps track of which dfa states have to be added
 
 # print nfa
 print "NFA:"
@@ -160,15 +168,16 @@ while (len(stack)):
 	for symbol in alphabet:
 		# the transition for each symbol starts off as an empty list
 		transitions[symbol] = []
-		# go through all the states in the new state
-		for childstate in newstate:
-			# get all the next states which the childstate goes to with the symbol
-			add_next_states(childstate,symbol,transitions)
-			# if the newstate is not a list it is an original state in the nfa
-			# nfa original states may have epsilon transitions that need to be added
-			if not isinstance(newstate,list):
-				add_epsilon_transitions(childstate,symbol,transitions)
-	
+		if isinstance(newstate,list):
+			# go through all the states in the new state
+			for childstate in newstate:
+				# get all the next states which the childstate goes to with the symbol
+				add_next_states(childstate,symbol,transitions)
+		# if the newstate is not a list it is an original state in the nfa
+		# nfa original states may have epsilon transitions that need to be added
+		else:
+			add_next_states(newstate,symbol,transitions)
+			add_epsilon_transitions(newstate,symbol,transitions)
 	# add the new dfa state to the list of old states
 	add_to_oldstate(oldstates,newstate)
 	
@@ -192,7 +201,7 @@ while (len(stack)):
 	else:
 		dfa[newstate] = transitions
 
-#	print_debug(newstate,transitions,stack,oldstates)	
+	#print_debug(newstate,transitions,stack,oldstates)	
 
 # get end states
 newaccept = []
