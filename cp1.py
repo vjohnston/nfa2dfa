@@ -2,33 +2,56 @@ import sys
 
 # function that converts a csv file into an nfa
 def load_csv(nfa_file):
-		f = open(nfa_file, 'r')
-		for line in f:
-			line = line.rstrip()
-			line = line.replace(' ','')
-			components = line.split(',')
+	f = open(nfa_file, 'r')
+	for line in f:
+		line = line.rstrip()
+		line = line.replace(' ','')
+		components = line.split(',')
 
-			if components[0] == '':
-				for piece in components[1:]:
-					alphabet.append(piece)
-			else:
-				if components[0][0] == '>':
-					start = components[0][1:]
-					components[0] = components[0].replace('>','')
-				elif components[0][0] == '@':
-					accept.append(components[0][1:])
-					components[0] = components[0].replace('@','')
+		if components[0] == '':
+			for piece in components[1:]:
+				alphabet.append(piece)
+		else:
+			if components[0][0] == '>':
+				start = components[0][1:]
+				components[0] = components[0].replace('>','')
+			elif components[0][0] == '@':
+				accept.append(components[0][1:])
+				components[0] = components[0].replace('@','')
 
-				possible = {}
-				for index, piece in enumerate(components[1:]):
-					if piece != '':
-						piece = piece.split('|')
-						possible[alphabet[index]] = piece
-				nfa[components[0]] = possible
+			possible = {}
+			for index, piece in enumerate(components[1:]):
+				if piece != '':
+					piece = piece.split('|')
+					possible[alphabet[index]] = piece
+			nfa[components[0]] = possible
 
-		if '&' in alphabet:
-			alphabet.remove('&')
-		f.close()
+	if '&' in alphabet:
+		alphabet.remove('&')
+	f.close()
+
+# function that converts answer back into the table format
+def print_table():
+	print '{:<6}'.format('') + ',' ,
+	for symbol in alphabet:
+		print '{:<6}'.format(symbol) ,
+		if symbol != alphabet[-1]:
+				print ',' ,
+	print
+	for state, symbol in dfa.items():
+		cell = ''
+		if state in start:
+			cell += '>'
+		if state in newaccept:
+			cell += '@'
+		cell += str(state) 
+		print '{:<6}'.format(cell) + ',' ,
+		for symbol, next in symbol.items():
+			print '{:<6}'.format(next) ,
+			if symbol != alphabet[-1]:
+				print ',' ,
+		print
+
 
 #nfa = {'1': {'a':'2', 'c':'4'}, '2': {'b':'3', '&':'1'}, '3': {'a':'2'}, '4': {'c':'3', '&':'3'}}
 #alphabet = ['a','b','c']
@@ -184,3 +207,5 @@ print "Alphabet: " + str(alphabet)
 print "Transitions: " + str(dfa)
 print "Start: " + str(start)
 print "Accept: " + str(newaccept)
+
+print_table()
